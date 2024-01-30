@@ -1,0 +1,18 @@
+ipv6 dhcp pool DHCPv6_VLAN100
+address prefix 2001:db8:acad:a::/64
+dns-server 2001:db8:acad:a::
+domain-name www.facebook.com
+
+ipv6 dhcp pool DHCPv6_VLAN200
+address prefix 2001:db8:acad:b::/64
+dns-server 2001:db8:acad:b::
+domain-name www.google.com
+
+ipv6 enable
+ipv6 add autoconfig 
+ipv6 dhcp server DHCPv6
+ipv6 dhcp pool DHCPv6
+address prefix 2001:db8:acad:10::/64
+dns-server 2001:db8:acad:a::
+domain-name www.facebook.com
+domain-name www.google.com

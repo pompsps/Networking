@@ -1,0 +1,101 @@
+!ISP
+
+en
+conf t
+hostname ISP
+banner motd %Authorized personnel only!!!%
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input all
+
+int g0/0
+ip add 10.10.10.2 255.255.255.252
+no shut
+
+int se0/0/0
+ip add 11.11.11.1 255.255.255.252
+no shut
+
+int se0/0/1
+ip add 12.12.12.1 255.255.255.252
+no shut
+
+ip routing
+ip route 0.0.0.0 0.0.0.0 12.12.12.2
+ip route 0.0.0.0 0.0.0.0 11.11.11.2
+
+!R1
+en
+conf t
+hostname R1
+banner motd %Authorized personnel only!!!%
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input all
+
+int se0/0/0
+ip add 11.11.11.2 255.255.255.252
+no shut
+
+int g0/0
+no shut
+
+ipv6 unicast-routing
+
+int g0/0.10
+encap dot 10
+ip add 192.168.2.1 255.255.255.224
+ip helper-add 192.168.2.66
+ipv6 add 2001:db8:acad:a::1/64
+ipv6 enable
+no shut
+
+int g0/0.20
+encap dot 20
+ip add 192.168.2.33 255.255.255.224
+ip helper-add 192.168.2.66
+ipv6 add 2001:db8:acad:b::1/64
+ipv6 enable
+no shut
+
+int g0/1
+ip add 192.168.2.65 255.255.255.252
+no shut
+
+router rip
+ver 2
+network 192.168.2.0
+network 11.11.11.0
+redistribute static
+
+!Sw1
+en
+conf t
+hostname Sw1
+
+vlan 10
+name Accounting
+vlan 20
+name Cashier
+
+int ra fa0/1-5
+sw mo acc
+sw acc vlan 10
+
+int ra fa0/6-10
+sw mo acc
+sw acc vlan 20
+
+int g0/1
+sw mo trunk
+sw trunk all vlan 1-1000

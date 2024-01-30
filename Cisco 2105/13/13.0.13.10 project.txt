@@ -1,0 +1,452 @@
+VLAN40 - GUEST
+VLAN10 - JAVA
+VLAN20 - WEBAP
+VLAN30 - OFFICES
+VLAN99 - MANAGEMENT IP
+
+198.11.224.147 - SERVER IP ADD
+
+
+
+Subnet Name	Needed Size	Allocated Size	Address	Mask	Dec Mask	Assignable Range		Broadcast
+Guest		50	62	198.11.224.0	/26		255.255.255.192	198.11.224.1 - 198.11.224.62	198.11.224.63
+Java		20	30	198.11.224.64	/27		255.255.255.224	198.11.224.65 - 198.11.224.94	198.11.224.95
+Web		20	30	198.11.224.96	/27		255.255.255.224	198.11.224.97 - 198.11.224.126	198.11.224.127
+Offices		10	14	198.11.224.128	/28		255.255.255.240	198.11.224.129 - 198.11.224.142	198.11.224.143
+management	10	14	198.11.224.144	/28		255.255.255.240	198.11.224.145 - 198.11.224.158	198.11.224.159
+
+
+WLC Management IP - 172.16.1.254
+
+!Google Router
+en
+conf t
+hostname GoogleRouter
+aaa new-model
+aaa authen login default local
+
+ip domain-name cisco.com
+crypto key generate rsa gen mod 2048
+username admin1 secret admin1pa55
+
+line con 0
+login authen default
+line vty 0 4
+login authen default
+
+int g0/0
+ip add 12.12.12.1 255.255.255.252
+no shut
+
+int se0/0/1
+ip add 11.11.11.1 255.255.255.252
+no shut
+
+router eigrp 10
+network 12.12.12.0 0.0.0.3
+network 11.11.11.0 0.0.0.3
+
+!ISP
+en
+conf t
+hostname PLDT_ISP
+
+aaa new-model
+aaa authen login default local
+
+ip domain-name cisco.com
+crypto key generate rsa gen mod 2048
+username admin1 secret admin1pa55
+
+line con 0
+login authen default
+line vty 0 4
+login authen default
+
+int g0/0
+ip add 11.11.11.2 255.255.255.252
+no shut
+
+int se0/0/0
+ip add 10.10.10.1 255.255.255.252
+no shut
+
+int se0/0/1
+ip add 10.10.11.1 255.255.255.252
+no shut
+
+ip route 0.0.0.0 0.0.0.0 11.11.11.1
+
+router eigrp 10
+network 10.10.10.0 0.0.0.3
+network 10.10.11.0 0.0.0.3
+network 192.168.20.0
+
+network 198.20.224.0 0.0.0.63
+network 198.20.224.64 0.0.0.31
+network 198.20.224.96 0.0.0.31
+network 198.20.224.128 0.0.0.15
+network 198.20.224.144 0.0.0.7
+no auto-summary
+redistribute static
+
+!Main Router
+
+en
+conf t
+hostname ABC_MainRouter
+
+aaa new-model
+aaa authen login default local
+
+ip domain-name cisco.com
+crypto key generate rsa gen mod 2048
+username admin1 secret admin1pa55
+
+line con 0
+login authen default
+line vty 0 4
+login authen default
+access-class 101 in
+trans inp all
+
+ip routing
+
+ip route 0.0.0.0 0.0.0.0 10.10.10.2
+
+router eigrp 10
+network 192.168.20.0
+network 172.16.0.0 0.0.0.255
+network 198.11.224.0 0.0.0.63
+network 198.11.224.64 0.0.0.31
+network 198.11.224.96 0.0.0.31
+network 198.11.224.128 0.0.0.15
+network 198.11.224.144 0.0.0.7
+network 10.10.10.0 0.0.0.3
+no auto-summary
+redistribute static
+
+int g0/1
+no shut
+
+int g0/1.10
+encap dot 10
+ip add 198.11.224.65 255.255.255.224
+ip helper-address 198.11.224.147
+no shut
+
+int g0/1.20
+encap dot 20
+ip add 198.11.224.97 255.255.255.224
+ip helper-address 198.11.224.147
+no shut
+
+int g0/1.30
+encap dot 30
+ip add 198.11.224.129 255.255.255.248
+ip helper-address 198.11.224.147
+no shut
+
+int g0/1.40
+encap dot 40
+ip add 198.11.224.1 255.255.255.192
+ip helper-address 198.11.224.147
+no shut
+
+int g0/1.99
+encap dot 99 native
+ip add 198.11.224.145 255.255.255.248
+no shut
+
+int se0/0/0
+ip add 10.10.10.2 255.255.255.252
+no shut
+
+access-list 101 permit ip host 198.11.224.148 any
+
+line vty 0 4
+access-class 101 in
+
+!ABC Voice Router
+
+en
+conf t
+hostname VoiceRouter
+
+int fa0/0
+ip add 172.16.0.2 255.255.255.0
+no shut
+
+int fa0/1
+no shut
+
+int fa0/1.80
+encap dot 80
+ip add 192.168.20.1 255.255.255.0
+no shut
+
+ip dhcp pool VOICE
+network 192.168.20.0 255.255.255.248
+default-router 192.168.20.1
+option 150 ip 192.168.20.1
+exit
+
+tele
+max-dn 10
+max-ep 10
+ip source-add 192.168.20.1 port 2000
+auto assign 4 to 6
+auto assign 1 to 5
+
+ephone-dn 1
+num 101
+ephone-dn 2
+num 102
+ephone-dn 3
+num 103
+ephone-dn 4
+num 104
+
+di vo 100 voip
+se ta ipv4:172.16.2.2
+de 20.
+
+router eigrp 10
+network 10.10.10.0 0.0.0.3
+network 192.168.20.0
+network 172.16.0.0 0.0.0.255
+network 198.11.224.0 0.0.0.63
+network 198.11.224.64 0.0.0.31
+network 198.11.224.96 0.0.0.31
+network 198.11.224.128 0.0.0.15
+network 198.11.224.144 0.0.0.7
+no auto-summary
+redistribute static
+
+!ABC VoiceSw
+en
+conf t
+
+int fa0/1
+sw mo trunk
+sw trunk all vlan 80
+
+int ra fa0/2-5
+sw mo acc
+sw voice vlan 80
+
+!ABC MainSwitch
+
+en
+conf t
+hostname ABC_Switch
+
+ip domain-name cisco.com
+crypto key generate rsa gen mod 2048
+username admin1 secret admin1pa55
+
+line con 0
+login authen default
+line vty 0 4
+login authen default
+access-class 101 in
+trans inp all
+
+vlan 10
+name JavaAP
+vlan 20
+name WebAP
+vlan 30
+name OfficesAP
+vlan 40
+name GuestAP
+vlan 99
+name Management
+
+int ra fa0/1-15
+sw mo trunk
+sw trunk native vlan 99
+
+int ra fa0/20-24
+sw mo trunk
+sw trunk native vlan 99
+
+int g0/1
+sw mo trunk
+sw trunk native vlan 99
+
+access-list 101 permit ip host 198.11.224.148 any
+
+
+!XYZ Router
+
+en
+conf t
+hostname XYZ_MainRouter
+
+aaa new-model
+aaa authen login default local
+
+ip domain-name cisco.com
+crypto key generate rsa gen mod 2048
+username admin1 secret admin1pa55
+
+line con 0
+login authen default
+line vty 0 4
+login authen default
+trans inp all
+
+ip routing
+
+router eigrp 10
+network 10.10.11.0 0.0.0.3
+network 192.168.30.0
+network 172.16.0.0 0.0.0.255
+network 198.20.224.0 0.0.0.63
+network 198.20.224.64 0.0.0.31
+network 198.20.224.96 0.0.0.31
+network 198.20.224.128 0.0.0.15
+network 198.20.224.144 0.0.0.7
+no auto-summary
+redistribute static
+
+int g0/0
+ip add 172.16.2.1 255.255.255.0
+no shut
+
+int g0/1
+no shut
+
+int g0/1.10
+encap dot 10
+ip add 198.20.224.65 255.255.255.224
+ip helper-address 198.20.224.147
+no shut
+
+int g0/1.20
+encap dot 20
+ip add 198.20.224.97 255.255.255.224
+ip helper-address 198.20.224.147
+no shut
+
+int g0/1.30
+encap dot 30
+ip add 198.20.224.129 255.255.255.248
+ip helper-address 198.20.224.147
+no shut
+
+int g0/1.40
+encap dot 40
+ip add 198.20.224.1 255.255.255.192
+ip helper-address 198.20.224.147
+no shut
+
+int g0/1.99
+encap dot 99 native
+ip add 198.20.224.145 255.255.255.240
+no shut
+
+int se0/0/0
+ip add 10.10.11.2 255.255.255.252
+no shut
+
+!XYZ Voice
+
+en
+conf t
+hostname VoiceRouter
+
+int fa0/0
+ip add 172.16.2.2 255.255.255.0
+no shut
+
+int fa0/1
+no shut
+
+int fa0/1.80
+encap dot 80
+ip add 192.168.20.1 255.255.255.0
+no shut
+
+ip dhcp pool VOICE
+network 192.168.20.8 255.255.255.248
+default-router 192.168.20.9
+option 150 ip 192.168.20.9
+exit
+
+tele
+max-dn 10
+max-ep 10
+ip source-add 192.168.20.9 port 2000
+auto assign 4 to 6
+auto assign 1 to 5
+
+ephone-dn 1
+num 201
+ephone-dn 2
+num 202
+ephone-dn 3
+num 203
+ephone-dn 4
+num 204
+
+di vo 100 voip
+se ta ipv4:172.16.0.2
+de 10.
+
+router eigrp 10
+network 10.10.10.0 0.0.0.3
+network 192.168.20.0
+network 172.16.2.0 0.0.0.255
+network 198.20.224.0 0.0.0.63
+network 198.20.224.64 0.0.0.31
+network 198.20.224.96 0.0.0.31
+network 198.20.224.128 0.0.0.15
+network 198.20.224.144 0.0.0.7
+no auto-summary
+redistribute static
+
+!XYZ MainSwitch
+
+en
+conf t
+hostname ABC_Switch
+
+aaa new-model
+aaa authen login default local
+
+ip domain-name cisco.com
+crypto key generate rsa gen mod 2048
+username admin1 secret admin1pa55
+
+line con 0
+login authen default
+line vty 0 4
+login authen default
+access-class 101 in
+
+vlan 10
+name JavaAP
+vlan 20
+name WebAP
+vlan 30
+name OfficesAP
+vlan 40
+name GuestAP
+vlan 99
+name Management
+
+int ra fa0/1-15
+sw mo trunk
+sw trunk native vlan 99
+
+int ra fa0/20-24
+sw mo trunk
+sw trunk native vlan 99
+
+int g0/1
+sw mo trunk
+sw trunk native vlan 99
+
+access-list 101 permit ip host 198.20.224.148 any

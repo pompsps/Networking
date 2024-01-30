@@ -1,0 +1,199 @@
+
+!Edge Router
+en
+conf t
+hostname EdgeRouter
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encrypt
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input all
+
+int g0/1
+ip add 10.10.10.1 255.255.255.252
+no shut
+
+router eigrp 10
+network 10.10.10.0 0.0.0.3
+network 12.12.12.0 0.0.0.3
+redistribute ospf 1 metric 1 1 1 1 1
+
+!Main Router
+
+en
+conf t
+hostname MainRouter
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encrypt
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input all
+
+ip dhcp pool vlan10OSPF
+network 198.11.224.0 255.255.255.224
+default-router 198.11.224.1
+
+ip dhcp pool vlan20OSPF
+network 198.11.224.96 255.255.255.224
+default-router 198.11.224.97
+
+ip dhcp pool vlan10EIGRP
+network 198.11.224.64 255.255.255.224
+default-router 198.11.224.65
+
+ip dhcp pool vlan20EIGRP
+network 198.11.224.32 255.255.255.224
+default-router 198.11.224.33
+
+int g0/0
+ip add 10.10.10.2 255.255.255.252
+no shut
+
+int g0/1
+ip add 11.11.11.1 255.255.255.252
+no shut
+
+int g0/2
+ip add 12.12.12.1 255.255.255.252
+no shut
+
+router ospf 1
+router-id 1.1.1.1
+network 11.11.11.0 0.0.0.3 area 0
+network 198.11.224.0 0.0.0.31 area 1
+network 198.11.224.96 0.0.0.31 area 1
+redistribute eigrp 10
+
+
+========================================OSPF==================================================
+!Router 1
+
+en
+conf t
+hostname R1
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encrypt
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input all
+
+int g0/1
+ip add 11.11.11.2 255.255.255.252
+no shut
+
+int g0/0
+no shut
+
+int g0/0.10
+encap dot 10
+ip add 198.11.224.1 255.255.255.224
+ip helper-add 11.11.11.1
+no shut
+
+int g0/0.20
+encap dot 20
+ip add 198.11.224.97 255.255.255.224
+ip helper-address 11.11.11.1
+no shut
+
+router ospf 1
+router-id 2.2.2.2
+network 11.11.11.0 0.0.0.3 area 0
+network 198.11.224.0 0.0.0.31 area 1 
+network 198.11.224.96 0.0.0.31 area 1
+
+
+!Switch 1
+
+en
+conf t
+hostname Sw1
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encrypt
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input all
+
+int g0/1
+sw mo trunk
+sw trunk all vlan 1-1000
+
+int g0/2
+sw mo trunk
+sw trunk all vlan 1-1000
+
+int fa0/2
+sw mo acc
+sw acc vlan 10
+
+int fa0/3
+sw mo acc
+sw acc vlan 20
+
+========================================EIGRP==================================================
+
+!Router2
+
+en
+conf t
+hostname R1
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encrypt
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input all
+
+int g0/0
+no shut
+
+int g0/0.10
+encap dot 10
+ip add 198.11.224.65 255.255.255.224
+ip helper-address 12.12.12.1
+no shut
+
+int g0/0.20
+encap dot 10
+ip add 198.11.224.33 255.255.255.224
+ip helper-address 12.12.12.1
+no shut
+
+int g0/1
+ip add 12.12.12.2 255.255.255.2
+no shut
+
+router eigrp 10
+network 12.12.12.0 0.0.0.3
+network 198.11.224.64 0.0.0.31
+network 198.11.224.32 0.0.0.31
+redistribute ospf 1 metric 1 1 1 1 1

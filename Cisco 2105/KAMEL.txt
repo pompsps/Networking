@@ -1,0 +1,304 @@
+1st Floor - 198.16.224.16/28
+2nd Floor - 198.16.224.32/28
+3rd Floor - 198.16.224.0 /28
+	    198.16.224.48/28
+
+?!!!!!!!!!!!!!!!!!!!!!!!1st Floor
+
+-Router
+
+en
+conf t
+hostname FirstFloorRouter
+banner motd %WARNING!!! UNAUTHORIZED ACCESS LEADS TO POSSIBLE LAWSUITS!!!%
+enable secret cisco
+
+line vty 0 4
+password cisco
+login
+line con 0
+password cisco
+login
+
+int g0/0
+no shut
+
+int g0/0.10
+encap dot 10
+ip add 198.16.224.17 255.255.255.240
+ip helper-address 8.8.8.2
+no shut
+
+int se0/0/0
+ip add 11.11.11.2 255.255.255.252
+no shut
+
+int se0/0/1
+ip add 10.10.10.1 255.255.255.252
+no shut
+
+ip routing
+ip route 0.0.0.0 0.0.0.0 10.10.10.2
+ip route 0.0.0.0 0.0.0.0 11.11.11.1
+
+router eigrp 1
+network 198.16.224.32 0.0.0.15
+network 198.16.224.16 0.0.0.15
+network 198.16.224.0 0.0.0.15
+network 198.16.224.48 0.0.0.15
+redistribute static
+
+
+-Switch
+
+en
+conf t
+hostname FirstFloorSw
+banner motd %WARNING!!! UNAUTHORIZED ACCESS LEADS TO POSSIBLE LAWSUITS!!!%
+enable secret cisco
+
+line vty 0 4
+password cisco
+login
+line con 0
+password cisco
+login
+
+vlan 10
+name Operations
+
+int ra fa0/1-24
+sw mo acc
+sw acc vlan 10
+sw port mac sticky
+sw port max 1
+
+int ra fa0/6-23
+sw port violation restrict
+shut
+
+int g0/1
+sw mo trunk
+sw trunk all vlan 1-1000
+no shut
+
+int g0/2
+sw port vio restrict
+shut
+
+!!!!!!!!!!!!!!!!!!!!!2nd Floor
+
+-Router
+
+en
+conf t
+hostname SecondFloorRouter
+banner motd %WARNING!!! UNAUTHORIZED ACCESS LEADS TO POSSIBLE LAWSUITS!!!%
+enable secret cisco
+
+line vty 0 4
+password cisco
+login
+line con 0
+password cisco
+login
+
+int g0/0
+no shut
+
+int g0/0.20
+encap dot 20
+ip add 198.16.224.33 255.255.255.240
+ip helper-address 8.8.8.2
+no shut
+
+int se0/0/0
+ip add 10.10.10.2 255.255.255.252
+no shut
+
+int se0/0/1
+ip add 12.12.12.2 255.255.255.252
+no shut
+
+ip routing
+ip route 0.0.0.0 0.0.0.0 11.11.11.2
+ip route 0.0.0.0 0.0.0.0 12.12.12.1
+
+router eigrp 1
+network 198.16.224.32 0.0.0.15
+network 198.16.224.16 0.0.0.15
+network 198.16.224.0 0.0.0.15
+network 198.16.224.48 0.0.0.15
+redistribute static
+
+-Switch
+
+en
+conf t
+hostname FirstFloorSw
+banner motd %WARNING!!! UNAUTHORIZED ACCESS LEADS TO POSSIBLE LAWSUITS!!!%
+enable secret cisco
+
+line vty 0 4
+password cisco
+login
+line con 0
+password cisco
+login
+
+vlan 20
+name Marketing
+
+int ra fa0/1-24
+sw mo acc
+sw acc vlan 20
+sw port mac sticky
+sw port max 1
+
+int ra fa0/6-23
+sw port violation restrict
+shut
+
+int g0/1
+sw mo trunk
+sw trunk all vlan 1-1000
+sw port mac sticky
+no shut
+
+int g0/2
+sw port vio restrict
+shut
+
+!!!!!!!!!!!!!!!!!!!!!!!3rd Floor
+
+-Router
+
+en
+conf t
+hostname ThirdFloorRouter
+banner motd %WARNING!!! UNAUTHORIZED ACCESS LEADS TO POSSIBLE LAWSUITS!!!%
+enable secret cisco
+
+line vty 0 4
+password cisco
+login
+line con 0
+password cisco
+login
+
+int g0/0
+no shut
+
+int g0/0.30
+encap dot 30
+ip add 198.16.224.1 255.255.255.240
+ip helper-address 8.8.8.2
+no shut
+
+int g0/1
+no shut
+
+int g0/1.40
+encap dot 40
+ip add 198.16.224.49 255.255.255.240
+ip helper-address 8.8.8.2
+no shut
+
+int g0/2
+ip add 8.8.8.1 255.255.255.252
+no shut
+
+int se0/0/0
+ip add 12.12.12.2 255.255.255.252
+no shut
+
+int se0/0/1
+ip add 11.11.11.1 255.255.255.252
+no shut
+
+ip routing
+ip route 0.0.0.0 0.0.0.0 11.11.11.2
+ip route 0.0.0.0 0.0.0.0 12.12.12.1
+
+router eigrp 1
+network 198.16.224.32 0.0.0.15
+network 198.16.224.16 0.0.0.15
+network 198.16.224.0 0.0.0.15
+network 198.16.224.48 0.0.0.15
+redistribute static
+
+-FinSwitch
+
+en
+conf t
+hostname FinanceSw
+banner motd %WARNING!!! UNAUTHORIZED ACCESS LEADS TO POSSIBLE LAWSUITS!!!%
+enable secret cisco
+
+line vty 0 4
+password cisco
+login
+line con 0
+password cisco
+login
+
+vlan 30
+name Finance
+
+int ra fa0/1-24
+sw mo acc
+sw acc vlan 30
+sw port mac sticky
+sw port max 1
+
+int ra fa0/6-23
+sw port violation restrict
+shut
+
+int g0/1
+sw mo trunk
+sw trunk all vlan 1-1000
+sw port mac sticky
+no shut
+
+int g0/2
+sw port vio restrict
+shut
+
+-HRSwitch
+
+en
+conf t
+hostname HRSw
+banner motd %WARNING!!! UNAUTHORIZED ACCESS LEADS TO POSSIBLE LAWSUITS!!!%
+enable secret cisco
+
+line vty 0 4
+password cisco
+login
+line con 0
+password cisco
+login
+
+vlan 40
+name HR
+
+int ra fa0/1-24
+sw mo acc
+sw acc vlan 40
+sw port mac sticky
+sw port max 1
+
+int ra fa0/6-23
+sw port violation restrict
+shut
+
+int g0/1
+sw mo trunk
+sw trunk all vlan 1-1000
+sw port mac sticky
+no shut
+
+int g0/2
+sw port vio restrict
+shut

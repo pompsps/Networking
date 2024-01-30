@@ -1,0 +1,566 @@
+# AT&T ISP
+
+en
+conf t
+hostname AT&T_ISP
+banner motd $UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+ip dhcp pool VLAN100
+network 172.18.227.128 255.255.255.128
+default-router 172.18.227.129
+
+ip dhcp pool VLAN200
+network 172.18.231.0 255.255.255.128
+default-router 172.18.231.1
+
+int g0/0.10
+encap dot 10
+ip add 172.18.227.129 255.255.255.128
+no shut
+
+int g0/0.20
+encap dot 20
+ip add 172.18.231.1 255.255.255.128
+no shut
+
+int se0/0/0
+ip add 11.11.11.1 255.255.255.128
+no shut
+
+int se0/0/1
+ip add 11.11.20.1 255.255.255.128
+no shut
+
+ip route 0.0.0.0 0.0.0.0 11.11.11.2
+ip route 0.0.0.0 0.0.0.0 11.11.20.2
+
+router rip
+ver 2
+redistribute static
+network 11.0.0.0
+network 172.18.0.0
+no auto-summary
+
+# AT&T Switch
+
+en
+conf t
+hostname AT&T_ISP
+banner motd $UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+int ra fa0/1-5
+sw mo acc
+sw acc vlan 10
+
+int ra fa0/6-10
+sw mo acc
+sw acc vlan 20
+
+int g0/1
+sw mo trunk
+sw trunk all vlan 1-1000
+
+# PLDT ISP
+
+en
+conf t
+hostname Edge_Router
+banner motd $UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+int se0/0/1
+ip add 10.10.10.1 255.255.255.252
+no shut
+
+int se0/0/0
+ip add 11.11.11.2 255.255.255.128
+no shut
+
+ip route 0.0.0.0 0.0.0.0 10.10.10.2
+ip route 0.0.0.0 0.0.0.0 11.11.11.1
+
+# Globe ISP
+
+en
+conf t
+hostname GLOBE_ISP
+banner motd $UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+int se0/0/0
+ip add 10.10.20.1 255.255.255.252
+no shut
+
+int se0/0/1
+ip add 11.11.20.2 255.255.255.128
+no shut
+
+ip route 0.0.0.0 0.0.0.0 10.10.20.2
+ip route 0.0.0.0 0.0.0.0 11.11.20.1
+
+# Edge Router
+
+en
+conf t
+hostname Edge_Router
+banner motd $UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+int se0/0/1
+ip add 10.10.20.2 255.255.255.252
+no shut
+
+int vlan 1
+ip add 192.168.1.1 255.255.255.0
+
+ip dhcp pool AcctgVLAN10
+network 200.15.240.64 255.255.255.224
+default-router 200.15.240.66
+dns-server 172.18.231.2
+
+ip dhcp pool FinanceVLAN20
+network 200.15.240.0 255.255.255.192
+default-router 200.15.240.2
+dns-server 172.18.231.2
+
+ip dhcp pool IT-VLAN30
+network 200.15.240.96 255.255.255.224
+default-router 200.15.240.98
+dns-server 172.18.231.2
+
+ip dhcp excluded-address 200.15.240.1 200.15.240.3
+ip dhcp excluded-address 200.15.240.65 200.15.240.67
+ip dhcp excluded-address 200.15.240.97 200.15.240.98
+
+int g0/0
+ip add 192.168.1.1 255.255.255.0
+no shut
+
+int g0/0.10
+encap dot 10
+ip add 200.15.240.66 255.255.255.224
+no shut
+
+standby 1 ip 200.15.240.65
+standby 1 prio 105
+stand 1 preempt
+stand 1 track se0/0/1
+
+int g0/0.20
+encap dot 20
+ip add 200.15.240.2 255.255.255.192
+no shut
+
+standby 1 ip 200.15.240.1
+standby 1 prio 105
+stand 1 preempt
+stand 1 track se0/0/1
+
+int g0/0.30
+encap dot 30
+ip add 200.15.240.98 255.255.255.224
+no shut
+
+standby 1 ip 200.15.240.97
+standby 1 prio 105
+stand 1 preempt
+stand 1 track se0/0/1
+
+int se0/0/1
+ip add 10.10.20.2 255.255.255.252
+no shut
+
+router rip
+ver 2
+network 192.168.1.0
+no auto-summary
+
+ip routing
+ip route 0.0.0.0 0.0.0.0 10.10.20.1
+
+# BackUp Router
+
+en
+conf t
+hostname Backup_Router
+banner motd $UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+ip dhcp pool AcctgVLAN10
+network 200.15.240.64 255.255.255.224
+default-router 200.15.240.67
+dns-server 172.18.231.2
+
+ip dhcp pool FinanceVLAN20
+network 200.15.240.0 255.255.255.192
+default-router 200.15.240.3
+dns-server 172.18.231.2
+
+ip dhcp pool IT-VLAN30
+network 200.15.240.96 255.255.255.224
+default-router 200.15.240.99
+dns-server 172.18.231.2
+
+ip dhcp excluded-address 200.15.240.1 200.15.240.3
+ip dhcp excluded-address 200.15.240.65 200.15.240.67
+ip dhcp excluded-address 200.15.240.97 200.15.240.99
+
+int g0/0
+ip add 192.168.1.1 255.255.255.0
+no shut
+
+int g0/0.10
+encap dot 10
+ip add 200.15.240.67 255.255.255.224
+no shut
+
+standby 1 ip 200.15.240.65
+stand 1 preempt
+
+int g0/0.20
+encap dot 20
+ip add 200.15.240.3 255.255.255.192
+no shut
+
+standby 1 ip 200.15.240.1
+stand 1 preempt
+
+int g0/0.30
+encap dot 30
+ip add 200.15.240.99 255.255.255.224
+no shut
+
+standby 1 ip 200.15.240.97
+stand 1 preempt
+
+router rip
+ver 2
+no auto-sum
+network 192.168.1.0
+
+int se0/0/0
+ip add 10.10.10.2 255.255.255.252
+no shut
+
+ip route 0.0.0.0 0.0.0.0 10.10.10.1
+
+# MLS Core Switch
+
+en
+conf t
+hostname CORE_Switch
+banner motd $Warning! Access to this device might kill you!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+vtp mode server
+vtp domain cisco.com
+
+vlan 10
+name Accounting
+vlan 20
+name Finance
+vlan 30
+name IT
+
+ipv6 dhcp pool DHCPv6_VLAN10
+address prefix 2001:db8:acad:10::/64
+dns-server 2001:db8:acad:a::
+domain-name cisco.com
+
+int vlan 10
+ipv6 add 2001:db8:acad:10::/64
+ipv6 dhcp server DHCPv6_VLAN10
+ipv6 nd other
+
+ipv6 dhcp pool DHCPv6_VLAN20
+address prefix 2001:db8:acad:20::/64
+dns-server 2001:db8:acad:a::
+domain-name cisco.com
+
+int vlan 20
+ipv6 add 2001:db8:acad:20::/64
+ipv6 dhcp server DHCPv6_VLAN20
+ipv6 nd other
+
+
+ipv6 dhcp pool DHCPv6_VLAN30
+address prefix 2001:db8:acad:30::/64
+dns-server 2001:db8:acad:a::
+domain-name cisco.com
+
+int vlan 30
+ipv6 add 2001:db8:acad:30::/64
+ipv6 dhcp server DHCPv6_VLAN30
+ipv6 nd other
+
+
+int ra g1/0/20-21
+channel-group 1 mode auto
+sw trunk encap dot1q
+no shut
+
+int ra g1/0/23-24
+channel-group 3 mode active
+no shut
+
+int port-cha 1
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 2
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 3
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 4
+sw mo trunk
+sw trunk all vlan 1-1000
+
+router rip
+ver 2
+redistribute static
+network 192.168.1.0
+no auto-summary
+
+
+# MLS Back up Switch
+
+en
+conf t
+hostname First_Switch
+banner motd $Warning! Access to this device might kill you!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+int vlan 1
+ip add 192.168.1.3 255.255.255.0
+no shut
+
+int g1/0/22
+sw mo trunk
+sw trunk all vlan 1-1000
+no shut
+
+!PAGP
+int ra g1/0/20-21
+channel-group 2 mode auto
+
+!LACP
+int ra g1/0/23-24
+channel-group 3 mode passive
+
+int port-cha 1
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 2
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 3
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 4
+sw mo trunk
+sw trunk all vlan 1-1000
+
+router rip
+ver 2
+network 192.168.1.0
+no auto-summary
+
+# First Switch
+
+en
+conf t
+hostname First_Switch
+banner motd $Warning! Access to this device might kill you!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+int vlan 1
+ip add 192.168.1.3 255.255.255.0
+no shut
+
+vtp mode client
+vtp domain cisco.com
+
+int ra fa0/1-5
+sw mo acc
+sw acc vlan 10
+
+int ra fa0/6-10
+sw mo acc
+sw acc vlan 20
+
+int ra fa0/11-15
+sw mo acc
+sw acc vlan 30
+
+!PAGP
+int ra g0/1-2
+channel-group 1 mode desirable
+
+!LACP
+int ra fa0/23-24
+channel-group 4 mode active
+
+int port-cha 1
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 2
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 3
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 4
+sw mo trunk
+sw trunk all vlan 1-1000
+
+
+# Second Switch
+
+en
+conf t
+hostname Second_Switch
+banner motd $Warning! Access to this device might kill you!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input telnet
+password cisco
+login
+exit
+
+int vlan 1
+ip add 192.168.1.3 255.255.255.0
+no shut
+
+vtp mode client
+vtp domain cisco.com
+
+int ra fa0/1-5
+sw mo acc
+sw acc vlan 10
+
+int ra fa0/6-10
+sw mo acc
+sw acc vlan 20
+
+int ra fa0/11-15
+sw mo acc
+sw acc vlan 30
+
+!PAGP
+int ra g0/1-2
+channel-group 2 mode desirable
+
+!LACP
+int ra fa0/23-24
+channel-group 4 mode passive
+
+int port-cha 1
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 2
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 3
+sw mo trunk
+sw trunk all vlan 1-1000
+int port-cha 4
+sw mo trunk
+sw trunk all vlan 1-1000

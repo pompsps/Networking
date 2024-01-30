@@ -1,0 +1,115 @@
+# Main Switch #
+en
+conf t
+hostname mainSwitch
+banner motd $WARNING!!! Access to this device can lead to grave consequences!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input ssh
+login local
+exit
+
+username admin secret cisco
+ip domain-name com
+cry key gen rsa
+1024
+ip ssh vers 2
+
+int vlan 1
+ip add 192.168.1.1 255.255.255.0
+no shut
+
+int ra fa0/1-24
+sw mo acc
+sw po max 1
+sw po mac sticky
+sw po vio res
+
+int ra fa0/1-22
+shut
+
+int ra fa0/23-24
+sw po max 3
+
+# 2nd Switch
+
+en
+conf t
+hostname mainSwitch
+banner motd $WARNING!!! Access to this device can lead to grave consequences!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input ssh
+login local
+exit
+
+username admin secret cisco
+ip domain-name com
+cry key gen rsa
+1024
+ip ssh vers 2
+
+int vlan 1
+ip add 192.168.1.2 255.255.255.0
+no shut
+
+int ra fa0/1-24
+sw mo acc
+sw po max 1
+sw po mac sticky
+sw po vio res
+
+int ra fa0/3-23
+shut
+
+int fa0/24
+sw po max 3
+
+# 2nd Switch
+
+en
+conf t
+hostname mainSwitch
+banner motd $WARNING!!! Access to this device can lead to grave consequences!!$
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+transport input ssh
+login local
+exit
+
+username admin secret cisco
+ip domain-name com
+cry key gen rsa
+1024
+ip ssh vers 2
+
+int vlan 1
+ip add 192.168.1.3 255.255.255.0
+no shut
+
+int ra fa0/1-24
+sw mo acc
+sw po max 1
+sw po mac sticky
+sw po vio res
+
+int ra fa0/3-23
+shut
+
+int fa0/24
+sw po max 3

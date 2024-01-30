@@ -1,0 +1,95 @@
+8.1.1.2
+
+=========================================[Addressing Table]=====================================================
+Subnet Name	Needed Size	Allocated Size	Address	Mask	Dec Mask	Assignable Range	Broadcast
+pc	10	14	198.15.224.0	/28	255.255.255.240	198.15.224.1 - 198.15.224.14	198.15.224.15
+ec1	5	6	198.15.224.16	/29	255.255.255.248	198.15.224.17 - 198.15.224.22	198.15.224.23
+r1	2	2	198.15.224.24	/30	255.255.255.252	198.15.224.25 - 198.15.224.26	198.15.224.27
+==========================================[Configurations]======================================================
+
+!Router 1
+
+en
+conf t
+hostname Router1
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int se0/0/0
+ip add 198.15.224.25 255.255.255.252
+no shut
+
+int g0/0
+ip add 198.15.224.17 255.255.255.248
+no shut
+
+ip dhcp pool E1
+network 198.15.224.16 255.255.255.248
+default 198.15.224.17
+
+router ospf 1
+router-id 1.1.1.1
+network 198.15.224.24 0.0.0.3 area 0
+network 198.15.224.16 0.0.0.7 area 1
+network 198.15.224.0 0.0.0.15 area 2
+exit
+
+access-list 1 deny host 198.15.224.3
+access-list 1 permit any
+access-list 2 deny 198.15.224.0 0.0.0.15
+access-list 2 permit any
+int g0/0
+ip access-group 1 in
+line vty 0 4
+access-class 2 in
+
+!router 2
+
+en
+conf t
+hostname Router2
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int se0/0/1
+ip add 198.15.224.26 255.255.255.252
+no shut
+int g0/0
+ip add 198.15.224.1 255.255.255.240
+no shut
+
+ip dhcp pool R2_POOL
+network 198.15.224.0 255.255.255.240
+default 198.15.224.1
+
+router ospf 1
+router-id 2.2.2.2
+network 198.15.224.24 0.0.0.3 area 0
+network 198.15.224.16 0.0.0.7 area 1
+network 198.15.224.0 0.0.0.15 area 2
+exit
+
+access-list 2 deny 198.15.224.0 0.0.0.15
+access-list 2 permit any
+line vty 0 4
+access-class 2 in
+
+
+
+

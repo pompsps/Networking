@@ -1,0 +1,276 @@
+!XYZ Router
+
+en
+conf t
+hostname XYZRouter
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+trans inp telnet
+password cisco
+login
+exit
+
+int se0/0/0
+ip add 12.0.10.130 255.255.255.252
+no shut
+
+int fa0/1
+ip add 172.16.128.1 255.255.255.224
+ip helper-address 172.16.128.130
+no shut
+
+int fa0/0
+ip add 172.16.128.129 255.255.255.252
+ip helper-address 172.16.128.130
+no shut
+
+int Eth1/1/0
+ip add 172.16.128.33 255.255.255.224
+ip helper-address 172.16.128.130
+no shut
+
+int fa1/0
+ip add 172.16.128.65 255.255.255.224
+ip helper-address 172.16.128.130
+no shut
+
+int fa1/1
+ip add 172.16.128.97 255.255.255.224
+ip helper-address 172.16.128.130
+no shut
+
+router eigrp 1
+network 12.0.10.128 0.0.0.3
+network 172.16.128.0
+
+ip route 0.0.0.0 0.0.0.0 12.0.10.131 250
+
+!ABC Router
+
+en
+conf t
+hostname ABCRouter
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+trans inp telnet
+password cisco
+login
+exit
+
+int se0/0/0
+ip add 12.0.10.134 255.255.255.252
+no shut
+
+int fa1/0
+ip add 189.220.192.1 255.255.255.224
+ip helper-address 189.220.192.254
+no shut
+
+int fa1/1
+ip add 189.220.192.33 255.255.255.224
+ip helper-address 189.220.192.254
+no shut
+
+int eth1/1/0
+ip add 189.220.192.65 255.255.255.224
+ip helper-address 189.220.192.254
+no shut
+
+int fa0/0
+ip add 189.220.192.252 255.255.255.252
+no shut
+
+router eigrp 1
+network 12.0.10.132 0.0.0.3
+network 189.220.192.0 0.0.0.255
+
+ip route 0.0.0.0 0.0.0.0 12.0.10.135 250
+
+!PLDT ISP
+
+en
+conf t
+hostname PLDT_ISP
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+trans inp telnet
+password cisco
+login
+exit
+
+int se0/0/1
+ip add 12.0.10.129 255.255.255.252
+no shut
+
+int se0/1/1
+ip add 22.80.10.242 255.255.255.252
+no shut
+
+int se0/1/0
+ip add 12.0.10.133 255.255.255.252
+no shut
+
+router eigrp 1
+network 12.0.10.128 0.0.0.3
+network 12.0.10.132 0.0.0.3
+network 12.0.10.136 0.0.0.3
+network 172.16.128.0 0.0.0.255
+network 189.220.192.0 0.0.0.255
+network 22.80.10.240 0.0.0.3
+
+!AT&T ISP
+
+en
+conf t
+hostname AT&T_ISP
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+trans inp telnet
+password cisco
+login
+exit
+
+int se0/1/1
+ip add 12.0.10.138 255.255.255.252
+no shut
+
+int se0/0/0
+ip add 11.15.0.1 255.255.255.252
+no shut
+
+int se0/0/1
+ip add 200.160.224.1 255.255.255.252
+no shut
+
+int se0/1/0
+ip add 18.11.215.193 255.255.255.252
+no shut
+
+router eigrp 1
+network 12.0.10.136 0.0.0.3
+network 22.80.10.240 0.0.0.3
+network 18.11.215.192 0.0.0.3
+network 11.15.0.0 0.0.0.3
+network 11.15.0.4 0.0.0.3
+network 200.160.224.0 0.0.0.3
+network 200.160.224.4 0.0.0.3
+
+!Google Router
+
+en
+conf t
+hostname GOOGLE
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+trans inp telnet
+password cisco
+login
+exit
+
+int se0/0/0
+ip add 22.80.10.242 255.255.255.252
+no shut
+
+int g0/0
+ip add 11.15.0.1 255.255.255.128
+no shut
+
+router eigrp 1
+network 22.80.10.240 0.0.0.3
+network 11.15.0.0 0.0.0.3
+network 11.15.0.4 0.0.0.3
+
+!YAHOO Router
+
+en
+conf t
+hostname YAHOO
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+trans inp telnet
+password cisco
+login
+exit
+
+int se0/0/0
+ip add 22.80.10.246 255.255.255.252
+no shut
+
+int g0/0
+ip add 200.160.224.5 255.255.255.252
+no shut
+
+router eigrp 1
+network 22.80.10.240 0.0.0.3
+network 200.160.224.0 0.0.0.3
+network 200.160.224.4 0.0.0.3
+
+!FB Router
+
+en
+conf t
+hostname FACEBOOK
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+trans inp telnet
+password cisco
+login
+exit
+
+int se0/0/0
+ip add 18.11.215.194 255.255.255.252
+no shut
+
+int g0/0
+ip add 18.11.215.197 255.255.255.252
+no shut
+
+router eigrp 1
+network 18.11.215.192 0.0.0.3
+network 18.11.215.196 0.0.0.3
+
+
+
+

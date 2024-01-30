@@ -1,0 +1,97 @@
+=========================================[Addressing Table]=====================================================
+
+Subnet Name	Needed Size	Allocated Size	Address	Mask	Dec Mask	Assignable Range	Broadcast
+area2	10	14	198.15.224.0	/28	255.255.255.240	198.15.224.1 - 198.15.224.14	198.15.224.15
+area1	5	6	198.15.224.16	/29	255.255.255.248	198.15.224.17 - 198.15.224.22	198.15.224.23
+R1-R2	2	2	198.15.224.24	/30	255.255.255.252	198.15.224.25 - 198.15.224.26	198.15.224.27
+
+==========================================[Configurations]======================================================
+
+!R1
+en
+conf t
+hostname R1
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+ip dhcp pool R1DHCP
+network 198.15.224.16 255.255.255.248
+default-router 198.15.224.17
+ip dhcp excluded-address 198.15.224.17 198.15.224.19
+
+int g0/0
+ip add 198.15.224.17 255.255.255.248
+no shut
+
+int se0/0/0
+ip add 198.15.224.25 255.255.255.252
+no shut
+
+router ospf 1
+router-id 1.1.1.1
+network 198.15.224.24 0.0.0.3 area 0
+network 198.15.224.16 0.0.0.7 area 1
+exit
+
+access-list 101 deny tcp host 198.15.224.7 any eq 23
+access-list 101 permit ip any any
+
+line vty 0 4
+ip access-group 101 in
+
+
+!R2
+
+en
+conf t
+hostname R2
+banner motd %Authorized Personnel ONLY!!!%
+enable secret cisco
+service password-encryption
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+ip dhcp pool R2DHCP
+network 198.15.224.0 255.255.255.240
+default 198.15.224.1
+ip dhcp excluded-address 198.15.224.1 198.15.224.5
+
+int g0/0
+ip add 198.15.224.1 255.255.255.240
+no shut
+
+int se0/0/0
+ip add 198.15.224.26 255.255.255.252
+no shut
+
+router ospf 1
+router-id 2.2.2.2
+network 198.15.224.24 0.0.0.3 area 0
+network 198.15.224.1 0.0.0.15 area 2
+exit
+
+access-list 101 deny ip 198.15.224.16 0.0.0.7 host 198.15.224.6
+access-list 101 permit ip any any
+access-list 102 deny tcp host 198.15.224.7 any eq 23
+access-list 102 permit ip any any
+
+int se0/0/0
+ip access-group 101 in
+
+line vty 0 4
+access-class 102 in

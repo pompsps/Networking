@@ -1,0 +1,320 @@
+!!!PRACTICE Configuration
+
+=====================================AREA 0=================================
+
+!EIGRP Router
+
+en
+conf t
+hostname EIGRP_Router
+banner motd %WARNING!!! Authorized Personnel Only!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int g0/0
+ip add 1.1.1.1 255.255.255.252
+no shut
+
+ip dhcp pool AREA1_VLAN10Pool
+network 192.168.10.0 255.255.255.192
+default-router 192.168.10.1
+
+ip dhcp pool AREA1_VLAN20Pool
+network 192.168.20.0 255.255.255.0
+default-router 192.168.20.1
+
+ip dhcp pool AREA2_VLAN10Pool
+network 192.168.30.0 255.255.255.0
+default-router 192.168.30.1
+
+ip dhcp pool AREA2_VLAN20Pool
+network 192.168.40.0 255.255.255.0
+default-router 192.168.40.1
+
+router eigrp 1
+redistribute ospf 1 metric 1 1 1 1 1
+network 1.1.1.0 0.0.0.3
+
+!ASBR
+
+en
+conf t
+hostname ASBR
+banner motd %WARNING!!! Authorized Personnel Only!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int g0/0
+ip add 1.1.1.2 255.255.255.252
+no shut
+
+int g0/1
+ip add 12.12.12.1 255.255.255.252
+no shut
+
+int g0/2 
+ip add 21.21.21.1 255.255.255.252
+no shut
+
+router ospf 1
+redistribute eigrp 1 subnets
+router-id 1.1.1.1
+network 1.1.1.0 0.0.0.3 area 0
+network 12.12.12.0 0.0.0.3 area 0
+network 21.21.21.0 0.0.0.3 area 0
+exit
+
+router eigrp 1
+network 1.1.1.0 0.0.0.3
+redist ospf 1 metric 1 1 1 1 1
+exit
+
+!ABR1
+
+en
+conf t
+hostname ABR1
+banner motd %WARNING!!! Authorized Personnel Only!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int g0/1
+ip add 12.12.12.2 255.255.255.252
+no shut
+
+int g0/2
+ip add 11.11.11.1 255.255.255.252
+no shut
+
+router ospf 1
+router-id 2.2.2.2
+network 12.12.12.0 0.0.0.3 area 0
+network 11.11.11.0 0.0.0.3 area 1
+exi
+
+!ABR2
+
+en
+conf t
+hostname ABR2
+banner motd %WARNING!!! Authorized Personnel Only!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int g0/2
+ip add 21.21.21.2 255.255.255.252
+no shut
+int g0/1 
+ip add 20.20.20.1 255.255.255.252
+no shut
+
+router ospf 1
+router-id 3.3.3.3
+network 21.21.21.0 0.0.0.3 area 0
+network 20.20.20.0 0.0.0.3 area 2
+exit
+
+============================AREA 1=========================
+
+!Router 1
+
+en
+conf t
+hostname R1-1
+banner motd %WARNING!!! Authorized Personnel Only!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int g0/2
+ip add 11.11.11.2 255.255.255.252
+no shut
+
+int g0/1
+ip add 10.10.10.1 255.255.255.252
+no shut
+
+router ospf 1
+router-id 4.4.4.4
+network 11.11.11.0 0.0.0.3 area 1
+network 10.10.10.0 0.0.0.3 area 1
+exit
+
+!Router 2
+
+en
+conf t
+hostname R1-2
+banner motd %WARNING!!! Authorized Personnel Only!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int g0/0
+no shut
+
+int g0/0.10
+encap dot1q 10
+ip add 192.168.10.1 255.255.255.192
+ip helper-address 1.1.1.1
+no shut
+
+int g0/0.20
+encap dot1q 20
+ip add 192.168.20.1 255.255.255.0
+ip helper-address 1.1.1.1
+no shut
+
+
+int g0/1
+ip add 10.10.10.2 255.255.255.252
+no shut
+
+router ospf 1
+router-id 5.5.5.5
+network 11.11.11.0 0.0.0.3 area 1
+network 10.10.10.0 0.0.0.3 area 1
+exit
+
+!Switch
+
+en
+conf t
+hostname Switch-1
+banner motd %WARNING!!! Authorized Personnel Only!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int ra fa0/1-5
+sw mo acc
+sw acc vlan 20
+
+int ra fa0/6-10
+sw mo acc
+sw acc vlan 10
+
+int g0/1
+sw mo trunk
+sw trunk all vlan 1-1000
+
+
+=========================================Area 2=====================================
+
+
+!R2-1
+
+en
+conf t
+hostname R1-1
+banner motd %WARNING!!! Authorized Personnel Only!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int g0/0
+no shut
+
+int g0/0.10
+encap dot 10
+ip add 192.168.30.1 255.255.255.0
+ip helper-address 1.1.1.1
+no shut
+
+int g0/0.20
+encap dot 20
+ip add 192.168.40.1 255.255.255.0
+ip helper-address 1.1.1.1
+no shut
+
+int g0/1
+ip add 20.20.20.2 255.255.255.252
+no shut
+
+router ospf 1
+router-id 6.6.6.6
+network 20.20.20.0 0.0.0.3 area 2
+network 192.168.30.0 0.0.0.255 area 2
+network 192.168.40.0 0.0.0.255 area 2
+exit
+
+!Switch
+
+en
+conf t
+hostname Switch-2
+banner motd %WARNING!!! Authorized Personnel Only!!!%
+enable secret cisco
+
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+exit
+
+int ra fa0/1-5
+sw mo acc
+sw acc vlan 20
+
+int ra fa0/6-10
+sw mo acc
+sw acc vlan 10
+
+int g0/1
+sw mo trunk
+sw trunk all vlan 1-1000
+

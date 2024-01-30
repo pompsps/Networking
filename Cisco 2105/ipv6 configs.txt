@@ -1,0 +1,46 @@
+stateful:
+
+!Router
+en
+conf t
+
+ipv6 unicast routing
+
+ipv6 dhcp pool DHCPv6
+address prefix 2001:db8:acad::0/64
+dns-server 2001:db8:acad::1
+domain-name xyz.com
+
+int g0/0
+no shut
+
+int g0/0.10
+encap dot 10
+ipv6 add fe80::1 link-local
+ipv6 add 2001:db8:acad:a::1/64
+ipv6 nd other
+ipv6 dhcp server DHCPv6]]
+
+int g0/0.20
+encap dot 20
+ipv6 add fe80::1 link-local
+ipv6 add 2001:db8:acad:b::1/64
+ipv6 nd other
+ipv6 dhcp server DHCPv6
+
+Stateless:
+
+ipv6 unicast-routing
+
+ipv6 dhcp pool DHCPv6
+dns-server 2001:db8:acad::1
+domain-name xyz.com
+
+int g0/0
+no shut
+
+int g0/0.10
+encap dot 10
+ipv6 add fe80::1 link-local
+ipv6 add 2001:db8:acad:a::1/64
+ipv6 nd other

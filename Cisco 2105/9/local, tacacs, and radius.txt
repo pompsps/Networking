@@ -1,0 +1,208 @@
+!Local
+
+en
+conf t
+hostname R1
+banner motd %Authorized Personnel ONLY!%
+enable secret cisco
+username admin1 secret admin1pa55
+
+aaa new-model
+aaa authentication login myAuth local
+line con 0
+login authentication myAuth
+
+ip domain-name cisco.com
+crypto key gen rsa general-keys mod 1024
+
+line vty 0 4
+login authentication myAuth
+transport input all
+exit
+
+ip routing
+
+router rip
+version 2
+network 192.168.1.0
+network 10.1.1.0
+no auto-summary
+redistribute static
+
+int g0/1
+ip add 192.168.1.1 255.255.255.0
+no shut
+int se0/0/0
+ip add 10.1.1.1 255.255.255.252
+no shut
+
+!TACACS
+
+en
+conf t
+hostname R2
+username admin secret adminpa55
+
+aaa new-model
+aaa authen login mySSH-Login group tacacs+ local
+
+enable secret cisco
+ip domain-name cisco.com
+crypto key generate rsa gen mod 2048
+
+tacacs-server host 192.168.2.2
+tacacs-server key tacacspa55
+
+line con 0
+login authen mySSH-Login
+line vty 0 4
+login authen mySSH-Login
+trans inp all
+
+ip routing
+
+router rip
+vers 2
+network 192.168.2.0
+network 10.1.1.0
+network 10.2.2.0
+network 10.3.3.0
+no auto-summary
+redistribute static
+
+int g0/1
+ip add 198.11.224.1 255.255.255.0
+ip helper-address 198.11.224.2
+no shut
+
+int se0/0/0
+ip add 10.1.1.2 255.255.255.252
+no shut
+
+int se0/0/1
+ip add 10.2.2.2 255.255.255.252
+no shut
+
+int g0/0
+ip add 10.3.3.2 255.255.255.252
+no shut
+
+!RADIUS
+
+en
+conf t
+hostname R3
+
+ip domain-name cisco.com
+crypto key gen rsa gen mod 2048
+
+aaa new-model
+aaa authentication login ABC-Auth group radius
+
+radius server radiusServ
+address ipv4 172.16.1.2 auth-port 1645
+key radiusPass
+exit
+
+line con 0
+login authen mySSH-Login
+line vty 0 4
+login authen mySSH-Login
+transport input all
+exit
+
+ip routing
+
+router rip
+vers 2
+network 192.168.3.0
+network 10.2.2.0
+no auto-summary
+redist static
+
+int se0/0/1
+ip add 10.2.2.1 255.255.255.252
+no shut
+int g0/1
+ip add 192.168.3.1 255.255.255.0
+no shut
+
+
+!Main Router
+
+en
+conf t
+hostname Main_Router
+
+ip domain-name cisco.com
+crypto key generate rsa gen mod 2048
+username admin1 secret admin1pa55
+
+aaa new-model
+aaa authen login main local
+
+line con 0
+login authen main
+
+line vty 0 4
+transport input all
+login authen main
+exit
+
+ip routing
+
+router rip
+version 2
+network 10.10.10.0
+network 10.3.3.0
+network 192.168.0.0
+no auto-summary
+redistribute static
+
+int se0/0/0
+ip add 10.10.10.2 255.255.255.252
+no shut
+
+int g0/0
+ip add 10.3.3.1 255.255.255.252
+no shut
+
+!ISP
+
+en
+conf t
+hostname ISP
+
+ip domain-name cisco.com
+crypto key generate rsa gen mod 2048
+username admin1 secret admin1pa55
+
+aaa new-model
+aaa authen login default local
+
+line con 0
+login authen default
+
+line vty 0 4
+transport input all
+login authen default
+exit
+
+ip routing
+
+router rip
+version 2
+network 10.10.10.0
+network 172.16.10.0
+no auto-summary
+redistribute static
+
+int se0/0/0
+ip add 10.10.10.1 255.255.255.252
+no shut
+
+int g0/0
+ip add 172.16.10.1 255.255.255.0
+no shut
+
+

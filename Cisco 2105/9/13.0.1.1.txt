@@ -1,0 +1,69 @@
+en
+conf t
+hostname R1
+banner motd %Authorized Personnel ONLY!%
+enable secret cisco
+username admin1 secret admin1pa55
+
+aaa new-model
+aaa authentication login mySSH-Login group radius
+
+radius server radiusServ
+address ipv4 198.15.240.2 auth-port 1645
+key radiusPass
+exit
+
+ip domain-name cisco.com
+crypto key gen rsa general-keys mod 1024
+
+line con 0
+login authentication mySSH-Login
+
+line vty 0 4
+login authentication mySSH-Login
+transport input all
+exit
+
+ip routing
+
+ip route 0.0.0.0 0.0.0.0 10.1.1.2
+
+int g0/1
+ip add 198.15.240.1 255.255.255.0
+no shut
+int se0/0/0
+ip add 10.1.1.1 255.255.255.252
+no shut
+
+!ISP
+
+en
+conf t
+hostname ISP
+banner motd %Authorized Personnel ONLY!%
+enable secret cisco
+username admin1 secret admin1pa55
+
+aaa new-model
+aaa authentication login myAuth local
+line con 0
+login authentication myAuth
+
+ip domain-name cisco.com
+crypto key gen rsa general-keys mod 1024
+
+line vty 0 4
+login authentication myAuth
+transport input all
+exit
+
+ip routing
+
+ip route 0.0.0.0 0.0.0.0 10.1.1.1
+
+int g0/1
+ip add 8.8.8.1 255.255.255.0
+no shut
+int se0/0/0
+ip add 10.1.1.2 255.255.255.252
+no shut
